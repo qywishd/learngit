@@ -1,0 +1,11 @@
+深度分离卷积是Xception这个模型中提出来的（不太确定，但肯定是它让这个概念为大众周知），具体来说分为两步，depthwise conv和pointwise conv，前者对输入特征图的每个通道进行卷积，然后将输出串联，后者就是大家都知道的1X1卷积，二者结合，使得参数量和计算量大幅减少，关键是效果还挺好，不服不行。因为自己想在网络中加入这一结构，于是谷歌pytorch是怎么实现的，发现结果不多，不过还是看到了想要的答案，在这个项目里https://github.com/tstandley/Xception-PyTorch/blob/master/xception.py，这是一个xception的pytorch实现，里面有关于depthwise卷积的实现，然后我发现pytorch已经支持了，至少在0.4中可以。
+
+我就记录下这个函数吧。准确地说是类。
+
+class　torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1,bias=True)
+
+其中，输入输出，核的size，步长，补零都不用说了，dilation是关于卷积核的，不讲了，groups就是实现depthwise conv的关键，默认为1，意思是将输入分为一组，此时是常规卷积，当将其设为in_channels时，意思是将输入的每一个通道作为一组，然后分别对其卷积，输出通道数为k，最后再将每组的输出串联，最后通道数为in_channels*K。
+
+最后总结下，要实现depthwise conv，就将groups设为in_channels，同时out_channels也设为与in_channels相同。
+
+然后再加上1X1卷积，这样就符合xception的结构了。
